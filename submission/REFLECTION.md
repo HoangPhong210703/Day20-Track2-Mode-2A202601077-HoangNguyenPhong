@@ -132,7 +132,35 @@ về song song.
 
 ## 6. Bonus  *(optional — tối đa 20 điểm)*
 
-_(không làm phần này)_
+**Đã làm:** B2 `sweep-batch` (chunked prefill) · B3 số liệu bên dưới · B5/C8 semantic
+cache (`semantic-cache --offline --sweep`) — xem `benchmarks/bonus-batch-size-sweep.md`
+và `benchmarks/bonus-semantic-cache.md`.
+
+**Numbers (B2, metric `pp512`):**
+
+```
+before:  939.7 tok/s   (-b 128  -ub 128)
+after:  1063.1 tok/s   (-b 512  -ub 256)
+speedup: 1.13x
+```
+
+**Điều này nói lên gì mà deck chưa nói:**
+
+Deck trình bày chunked prefill như một đánh đổi cần tune. Trên máy này nó không phải
+đường cong mà là **ngưỡng**: mọi cấu hình từ 256 trở lên nằm trong 1.5% của nhau, chỉ
+`-b 128 -ub 128` (88%) là thực sự tệ. Kết luận đúng là "đừng xuống dưới 256", không phải
+"chỉnh tới 512/256".
+
+Nhưng con số đáng nói nhất là chỗ khác: `llama-bench` prefill **1063 tok/s**, trong khi
+`llama-server` của tôi chỉ đạt ~74–87 tok/s prefill. Phần cứng nhanh hơn **12×** so với
+những gì server đang khai thác — đúng chỗ mà §3 đề xuất tấn công `--ubatch-size`, và giờ
+có bằng chứng độc lập.
+
+Với B5/C8: một hit của semantic cache bỏ qua **100% compute** (không prefill, không
+decode), khác hẳn KV/prefix cache bên dưới vốn chỉ tái dùng phần prefix chung — 3/8 prompt
+không hề chạm tới model. Sweep threshold **phẳng**, và đó là **artifact của stub embedder
+bag-of-words** (cosine chỉ ra 1.0 hoặc 0.0), không phải phát hiện; muốn có đường cong thật
+phải chạy `make serve-embed` rồi bỏ `--offline`.
 
 ---
 
