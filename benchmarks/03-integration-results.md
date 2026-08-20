@@ -32,8 +32,16 @@ By storing the KV cache in non-contiguous pages, it avoids the wasted space that
 > Splitting prefill and decode helps when the prefill operation is **compute-bound** and the decode operation is **memory-bandwidth-bound**, as stated in the context. This allows the system to split the workload across separate pools, enabling the engine to skip prefill entirely when a shared prefix is used in RadixAttention keys.
 
 
-## Which N16-N19 pieces are real (required -- replace this line)
+## Which N16-N19 pieces are real
 
-_List each of N16, N17, N18, N19 as real or stubbed. Stubbing costs no points;
-misrepresenting it does. Then answer: is the dominant stage above what you expected?
-If you had to halve this pipeline's latency, which stage would you attack and why?_
+N16 Cloud/IaC - **stub**. N17 Data pipeline - **stub**. N18 Lakehouse - **stub**.
+N19 Vector + features - **stub**: no embedding model is loaded, retrieval is keyword
+overlap over an in-memory corpus in `pipeline.py`. N20 serving is **real**
+(`llama-server`).
+
+So the 100% llm split is an artefact, not a finding: embed is 0.0 ms because nothing
+embeds, retrieve 0.1 ms because the corpus is a handful of dicts.
+
+To halve latency I would attack dead time inside the llm stage first. Client-side llm
+was 5.7-7.5 s, but the server reported only 2.3-3.1 s of prefill+decode. Over half that
+stage is not compute.

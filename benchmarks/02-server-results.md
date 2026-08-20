@@ -41,6 +41,8 @@ offered, so nearly everything was waiting, not running. `n_busy_slots_per_decode
 3.76/4 (94%), leaving no idle capacity. 5x offered load returned 1.24x throughput and
 1.37x P95: that difference is queue time.
 
-First knob would be `--ubatch-size`, not `--parallel`. Prefill is the bottleneck - 935
-prompt tokens at ~23 tok/s is ~41s of the 56s window, against 1360 decoded tokens at
-~77 tok/s, ~18s. More slots split a fixed budget; faster prefill enlarges it.
+First knob would be `--ubatch-size`, not `--parallel`. Warm prefill runs at ~74 tok/s
+against decode's ~78, yet prefill processes the whole prompt in parallel and should be
+far faster per token - so that path is what to widen. More slots only split a budget
+4-way concurrency already halved: 2295 tokens in 56.4s is 41 tok/s aggregate, against
+~76 single-stream.
